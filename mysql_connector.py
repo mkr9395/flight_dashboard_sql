@@ -10,14 +10,38 @@ from mysql.connector import Error
 
 
 try:
-    conn = c.connect(host="localhost",user="root",password="mohit@123",database='flights')
+    conn = c.connect(host="localhost",user="root",password="mohit@123")
     if conn.is_connected():
         cursor = conn.cursor()
         print("succesfully connected")
         
-        ##  create a database
-        # cursor.execute("CREATE DATABASE flights;")
-        # conn.commit()
+        ## create a database
+        database_name = 'flights'
+        cursor.execute(f"CREATE DATABASE {database_name};")
+        conn.commit()
+        
+except Error as e:
+    print("Database not created, Error while connecting to MySQL", e)
+    
+    
+finally:
+    if conn.is_connected():
+        cursor.close()
+        conn.close()
+        print("connection closed, database created")
+    
+
+
+
+
+try:
+    conn = c.connect(host="localhost",user="root",password="mohit@123",database=f'{database_name}')
+    if conn.is_connected():
+        cursor = conn.cursor()
+        print("succesfully connected")
+        
+        
+        
         
         ## select database
         cursor.execute("select database();")
@@ -39,7 +63,7 @@ try:
             source VARCHAR(255),
             destination VARCHAR(255),
             route VARCHAR(255),
-            dep_time TIME,
+            dep_time VARCHAR(255),
             duration INT,
             total_stops VARCHAR(255),
             price INT
@@ -57,7 +81,8 @@ try:
 
         # converting date_of_journey and dep_time columns to datetime format
         df['date_of_journey'] = pd.to_datetime(df['date_of_journey'], format='%d-%m-%Y')
-        df['dep_time'] = pd.to_datetime(df['dep_time'])
+        df['dep_time'] = pd.to_datetime(df['dep_time'] + ':00', format='%H:%M:%S').dt.strftime('%H:%M')
+
 
         
         # iterating through the dataFrame and inserting rows into the mysql table
@@ -79,4 +104,4 @@ finally:
     if conn.is_connected():
         cursor.close()
         conn.close()
-        print("connection closed")
+        print("connection closed, data added to mysql table")
